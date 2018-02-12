@@ -1,1 +1,1 @@
-# spriteorama
+# spritorama
