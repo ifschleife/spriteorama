@@ -1,6 +1,20 @@
 cmake_minimum_required(VERSION 3.8)
 project(spritorama)
 
+file(TO_CMAKE_PATH "${CMAKE_HOME_DIRECTORY}/bin" BinaryOutputDir)
+file(MAKE_DIRECTORY ${BinaryOutputDir})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BinaryOutputDir})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BinaryOutputDir})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BinaryOutputDir})
+
+# needed so Visual Studio does not create configuration sub-directories
+foreach(config ${CMAKE_CONFIGURATION_TYPES})
+    string(TOUPPER ${config} config)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${config} ${BinaryOutputDir})
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${config} ${BinaryOutputDir})
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${config} ${BinaryOutputDir})
+endforeach(config)
+
 set(DEFAULT_COMPILE_OPTIONS_DEBUG
     $<$<PLATFORM_ID:Windows>:/std:c++17>
     $<$<PLATFORM_ID:Linux>:-Wall>
