@@ -5,10 +5,19 @@
 #include <QCommandLineParser>
 #include <QDir>
 #include <QSettings>
+#include <QSurface>
 
 
 int main(int argc, char** argv)
 {
+    QSurfaceFormat format;
+    format.setProfile(QSurfaceFormat::CoreProfile);
+    format.setVersion(4, 5);
+    format.setSamples(1);
+    format.setSwapInterval(0);
+    format.setSwapBehavior(QSurfaceFormat::SingleBuffer);
+    QSurfaceFormat::setDefaultFormat(format);
+
     QApplication app(argc, argv);
     app.setApplicationName("spritorama");
 

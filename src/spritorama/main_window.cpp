@@ -1,5 +1,7 @@
 #include "main_window.hpp"
 
+#include "viewport.hpp"
+
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QMessageBox>
@@ -8,7 +10,9 @@
 
 MainWindow::MainWindow()
     : QMainWindow{nullptr}
+    , m_viewport(new Viewport(this))
 {
+    setCentralWidget(m_viewport);
 }
 
 MainWindow::~MainWindow() = default;

@@ -4,6 +4,8 @@ set(SOURCES
     main.cpp
     main_window.cpp
     main_window.hpp
+    viewport.cpp
+    viewport.hpp
 )
 
 find_package(Qt5Core REQUIRED)
@@ -23,7 +25,6 @@ set_target_properties(${APP_TARGET_NAME} PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX})
 
 target_link_libraries(${APP_TARGET_NAME}
-    stdc++fs # filesystem support in GCC & clang
     Qt5::OpenGL
     Qt5::Widgets)
 

@@ -13,4 +13,7 @@ public:
 
 private slots:
     void onOpenSprite();
+
+private:
+    class Viewport* m_viewport;
 };
