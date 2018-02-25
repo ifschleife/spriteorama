@@ -24,6 +24,8 @@ private:
 
 private:
     void createTextureFromImage();
+    void drawLine(const QPoint& start, const QPoint& end);
+    void drawPoint(const QPoint& pos);
 
 private:
     bool m_drawing;

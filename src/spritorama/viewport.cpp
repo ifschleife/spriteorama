@@ -83,26 +83,17 @@ void Viewport::mousePressEvent(QMouseEvent* event)
 {
     m_drawing = true;
     m_draw_pos = event->pos() / m_scale;
+    drawPoint(m_draw_pos);
+    update();
 }
 
 void Viewport::mouseMoveEvent(QMouseEvent* event)
 {
     if (m_drawing)
     {
-        QPoint current_pos = (event->pos()) / m_scale;
-        
-        QPolygon stroke;
-        stroke.append(m_draw_pos);
-        stroke.append(current_pos);
-        m_draw_pos = current_pos;
-        const QRect aabb = stroke.boundingRect();
-
-        QPainter painter(&m_image);
-        painter.setPen(Qt::blue);
-        painter.drawPolyline(stroke);
-
-        glTextureSubImage2D(m_texture_id, 0, aabb.left(), aabb.top(), aabb.width(), aabb.height(),
-                            GL_RGBA, GL_UNSIGNED_BYTE, m_image.copy(aabb).constBits());
+        const QPoint new_draw_pos = event->pos() / m_scale;
+        drawLine(m_draw_pos, new_draw_pos);
+        m_draw_pos = new_draw_pos;
 
         update();
     }
@@ -123,4 +114,29 @@ void Viewport::createTextureFromImage()
     glTextureParameteri(m_texture_id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTextureParameteri(m_texture_id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTextureParameteri(m_texture_id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+}
+
+void Viewport::drawLine(const QPoint& start, const QPoint& end)
+{
+    QPolygon stroke;
+    stroke.append(start);
+    stroke.append(end);
+
+    QPainter painter(&m_image);
+    painter.setPen(Qt::blue);
+    painter.drawPolyline(stroke);
+
+    const QRect aabb = stroke.boundingRect();
+    glTextureSubImage2D(m_texture_id, 0, aabb.left(), aabb.top(), aabb.width(), aabb.height(),
+                        GL_RGBA, GL_UNSIGNED_BYTE, m_image.copy(aabb).constBits());
+}
+
+void Viewport::drawPoint(const QPoint& pos)
+{
+    QPainter painter(&m_image);
+    painter.setPen(Qt::blue);
+    painter.drawPoint(pos);
+
+    glTextureSubImage2D(m_texture_id, 0, pos.x(), pos.y(), 1, 1,
+                        GL_RGBA, GL_UNSIGNED_BYTE, m_image.copy(QRect(pos, QSize(1, 1))).constBits());
 }
