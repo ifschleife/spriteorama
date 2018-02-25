@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/spritorama",
-            "args": [],
+            "args": ["-o", "assets/test_image_1920_1080.png"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
