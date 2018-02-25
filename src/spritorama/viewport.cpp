@@ -10,12 +10,10 @@ Viewport::Viewport(QWidget* parent)
     : QOpenGLWidget(parent)
     , QOpenGLFunctions_4_5_Core()
     , m_texture_shader_program(new QOpenGLShaderProgram(this))
-    , m_image("test_image_1920_1080.png")
+    , m_image("assets/test_image_1920_1080.png")
     , m_scale(1.0)
 {
-    const QSize scaled_image_size = m_image.size() * m_scale;
-    setMinimumSize(scaled_image_size);
-    setMaximumSize(scaled_image_size);
+    setFixedSize(m_image.size() * m_scale);
 
     // setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
     m_image = m_image.rgbSwapped();
