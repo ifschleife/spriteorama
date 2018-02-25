@@ -4,17 +4,21 @@
 #include <QMouseEvent>
 #include <QOpenGLShaderProgram>
 #include <QPainter>
-#include <QPaintEvent>
 
 
 Viewport::Viewport(QWidget* parent)
     : QOpenGLWidget(parent)
     , QOpenGLFunctions_4_5_Core()
-    , m_shader(new QOpenGLShaderProgram(this))
+    , m_texture_shader_program(new QOpenGLShaderProgram(this))
     , m_image("test_image_1920_1080.png")
-    , m_vertices{-0.5f, 0.5f, 0.0f, -1.0f, 0.5f, 0.5f}
+    , m_scale(1.0)
 {
-    m_scale = 1.5;
+    const QSize scaled_image_size = m_image.size() * m_scale;
+    setMinimumSize(scaled_image_size);
+    setMaximumSize(scaled_image_size);
+
+    // setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
+    m_image = m_image.rgbSwapped();
 }
 
 void Viewport::initializeGL()
@@ -25,48 +29,76 @@ void Viewport::initializeGL()
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
+    constexpr GLsizei vertex_count = 4*2;
+    constexpr float vertices[vertex_count] = {-1.0f,-1.0f, 1.0f,-1.0f, 1.0f,1.0f, -1.0,1.0f};
+
     glGenBuffers(1, &m_vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
-    const GLsizei buffer_size = static_cast<GLsizei>(m_vertices.size() * sizeof(float));
-    glNamedBufferData(m_vertex_buffer, buffer_size, m_vertices.data(), GL_STATIC_DRAW);
+    glNamedBufferData(m_vertex_buffer, vertex_count * sizeof(float), vertices, GL_STATIC_DRAW);
+
+    m_texture_shader_program->addShaderFromSourceFile(QOpenGLShader::Vertex, "src/spritorama/shaders/texture.vert");
+    m_texture_shader_program->addShaderFromSourceFile(QOpenGLShader::Fragment, "src/spritorama/shaders/texture.frag");
+    m_texture_shader_program->link();
+    // pos_attr = static_cast<GLuint>(m_texture_shader_program.attribLocation("position"));
+
+    glCreateTextures(GL_TEXTURE_2D, 1, &m_texture_id);
+    glTextureStorage2D(m_texture_id, 1, GL_RGBA8, m_image.width(), m_image.height());
+    glTextureSubImage2D(m_texture_id, 0, 0, 0, m_image.width(), m_image.height(),
+                        GL_RGBA, GL_UNSIGNED_BYTE, m_image.constBits());
+    glTextureParameteri(m_texture_id, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTextureParameteri(m_texture_id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTextureParameteri(m_texture_id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(m_texture_id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 }
 
-void Viewport::paintEvent(QPaintEvent* event)
+void Viewport::paintGL()
 {
-    QPainter painter(this);
-    painter.scale(m_scale, m_scale);
-    QRect rect = event->rect();
-    if (m_drawing)
-        rect = m_draw_bb;
+    glDisable(GL_DEPTH_TEST);
 
-    painter.drawImage(rect, m_image, rect);
+    m_texture_shader_program->bind();
+    glBindTextureUnit(0, m_texture_id);
+
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDisableVertexAttribArray(0);
+    glBindTextureUnit(0, 0);
+}
+
+void Viewport::resizeGL(int width, int height)
+{
+    glViewport(0, 0, width, height);
 }
 
 void Viewport::mousePressEvent(QMouseEvent* event)
 {
     m_drawing = true;
-    m_mouse_pos = event->pos() / m_scale;
+    m_draw_pos = event->pos() / m_scale;
 }
 
 void Viewport::mouseMoveEvent(QMouseEvent* event)
 {
     if (m_drawing)
     {
-        const QPoint current_pos = event->pos() / m_scale;
-        const int min_x = qMin(current_pos.x(), m_mouse_pos.x());
-        const int min_y = qMin(current_pos.y(), m_mouse_pos.y());
-        const int max_x = qMax(current_pos.x(), m_mouse_pos.x());
-        const int max_y = qMax(current_pos.y(), m_mouse_pos.y());
-
-        const QRect rect(min_x, min_y, max_x, max_y);
+        QPoint current_pos = (event->pos()) / m_scale;
+        
+        QPolygon stroke;
+        stroke.append(m_draw_pos);
+        stroke.append(current_pos);
+        m_draw_pos = current_pos;
+        const QRect aabb = stroke.boundingRect();
 
         QPainter painter(&m_image);
-        painter.setPen(Qt::red);
-        painter.drawLine(m_mouse_pos, current_pos);
-        m_mouse_pos = current_pos;
+        painter.setPen(Qt::blue);
+        painter.drawPolyline(stroke);
 
-        m_draw_bb = rect;
-        update(m_draw_bb);
+        glTextureSubImage2D(m_texture_id, 0, aabb.left(), aabb.top(), aabb.width(), aabb.height(),
+                            GL_RGBA, GL_UNSIGNED_BYTE, m_image.copy(aabb).constBits());
+
+        update();
     }
 }
 
