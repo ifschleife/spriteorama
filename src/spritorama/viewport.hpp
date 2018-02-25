@@ -11,6 +11,9 @@ class Viewport : public QOpenGLWidget, protected QOpenGLFunctions_4_5_Core
 public:
     explicit Viewport(QWidget* parent);
 
+    void loadImageFromFile(const QString& image_path);
+
+private:
     void initializeGL() override;
     void paintGL() override;
     void resizeGL(int width, int height) override;
@@ -20,14 +23,14 @@ public:
     void mouseReleaseEvent(class QMouseEvent* event) override;
 
 private:
+    bool m_drawing;
+    QPoint m_draw_pos;
+
     class QOpenGLShaderProgram* m_texture_shader_program;
 
-    GLuint m_texture_id;
     QImage m_image;
-    
-    QPoint m_draw_pos;
-    bool m_drawing = false;
-    qreal m_scale = 1.0;
+    qreal m_scale;
 
+    GLuint m_texture_id;
     GLuint m_vertex_buffer;
 };

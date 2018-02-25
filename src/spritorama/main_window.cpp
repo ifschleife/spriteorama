@@ -2,6 +2,7 @@
 
 #include "viewport.hpp"
 
+#include <QDebug>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QMessageBox>
@@ -25,6 +26,8 @@ void MainWindow::openSprite(const QString& fname)
         QMessageBox::warning(this, tr("Error opening file"), tr("Could not open %1").arg(fname));
         return;
     }
+
+    m_viewport->loadImageFromFile(fname);
 }
 
 void MainWindow::onOpenSprite()

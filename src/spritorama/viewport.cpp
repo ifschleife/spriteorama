@@ -9,14 +9,36 @@
 Viewport::Viewport(QWidget* parent)
     : QOpenGLWidget(parent)
     , QOpenGLFunctions_4_5_Core()
+    , m_drawing(false)
     , m_texture_shader_program(new QOpenGLShaderProgram(this))
-    , m_image("assets/test_image_1920_1080.png")
+    , m_image(QSize(500, 500), QImage::Format_RGB32)
     , m_scale(1.0)
 {
     setFixedSize(m_image.size() * m_scale);
 
     // setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
     m_image = m_image.rgbSwapped();
+}
+
+void Viewport::loadImageFromFile(const QString& image_path)
+{
+    m_image = QImage(image_path).rgbSwapped();
+    if (m_image.isNull())
+        return;
+
+    glDeleteTextures(1, &m_texture_id);
+
+    glCreateTextures(GL_TEXTURE_2D, 1, &m_texture_id);
+    glTextureStorage2D(m_texture_id, 1, GL_RGBA8, m_image.width(), m_image.height());
+    glTextureSubImage2D(m_texture_id, 0, 0, 0, m_image.width(), m_image.height(),
+                        GL_RGBA, GL_UNSIGNED_BYTE, m_image.constBits());
+    glTextureParameteri(m_texture_id, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTextureParameteri(m_texture_id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTextureParameteri(m_texture_id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(m_texture_id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    setFixedSize(m_image.size() * m_scale);
+    update();
 }
 
 void Viewport::initializeGL()
