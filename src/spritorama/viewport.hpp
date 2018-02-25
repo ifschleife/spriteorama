@@ -21,6 +21,7 @@ private:
     void mousePressEvent(class QMouseEvent* event) override;
     void mouseMoveEvent(class QMouseEvent* event) override;
     void mouseReleaseEvent(class QMouseEvent* event) override;
+    void wheelEvent(class QWheelEvent* event) override;
 
 private:
     void createTextureFromImage();
@@ -30,6 +31,7 @@ private:
 private:
     bool m_drawing;
     QPoint m_draw_pos;
+    qreal m_scroll_delta;
 
     class QOpenGLShaderProgram* m_texture_shader_program;
 

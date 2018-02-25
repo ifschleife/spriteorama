@@ -4,12 +4,14 @@
 #include <QMouseEvent>
 #include <QOpenGLShaderProgram>
 #include <QPainter>
+#include <QWheelEvent>
 
 
 Viewport::Viewport(QWidget* parent)
     : QOpenGLWidget(parent)
     , QOpenGLFunctions_4_5_Core()
     , m_drawing(false)
+    , m_scroll_delta(0.0)
     , m_texture_shader_program(new QOpenGLShaderProgram(this))
     , m_image(QSize(500, 500), QImage::Format_RGB32)
     , m_scale(1.0)
@@ -102,6 +104,27 @@ void Viewport::mouseMoveEvent(QMouseEvent* event)
 void Viewport::mouseReleaseEvent(QMouseEvent*)
 {
     m_drawing = false;
+}
+
+void Viewport::wheelEvent(QWheelEvent* event)
+{
+    if (event->modifiers() & Qt::ControlModifier)
+    {
+        m_scroll_delta += event->delta();
+        if (qAbs(m_scroll_delta) > qreal(150))
+        {
+            m_scale *= event->delta() > 0 ? 2.0 : 0.5;
+
+            setFixedSize(m_image.size() * m_scale);
+            update();
+
+            m_scroll_delta = qreal(0);
+        }
+    }
+    else
+    {
+        event->ignore();
+    }
 }
 
 void Viewport::createTextureFromImage()
