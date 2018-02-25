@@ -23,6 +23,9 @@ private:
     void mouseReleaseEvent(class QMouseEvent* event) override;
 
 private:
+    void createTextureFromImage();
+
+private:
     bool m_drawing;
     QPoint m_draw_pos;
 
