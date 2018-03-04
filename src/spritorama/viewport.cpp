@@ -16,10 +16,9 @@ Viewport::Viewport(QWidget* parent)
     , m_image(QSize(500, 500), QImage::Format_RGB32)
     , m_scale(1.0)
 {
-    setFixedSize(m_image.size() * m_scale);
-
     // setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
-    m_image = m_image.rgbSwapped();
+    
+    m_image.fill(Qt::red);
 }
 
 void Viewport::loadImageFromFile(const QString& image_path)
@@ -32,8 +31,12 @@ void Viewport::loadImageFromFile(const QString& image_path)
 
     createTextureFromImage();
 
-    setFixedSize(m_image.size() * m_scale);
     update();
+}
+
+QSize Viewport::sizeHint() const
+{
+    return m_image.size();
 }
 
 void Viewport::initializeGL()
@@ -44,19 +47,20 @@ void Viewport::initializeGL()
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
-    constexpr GLsizei vertex_count = 4*2;
-    constexpr float vertices[vertex_count] = {-1.0f,-1.0f, 1.0f,-1.0f, 1.0f,1.0f, -1.0,1.0f};
+    calculateProjectionMatrix(size());
+    const QMatrix4x4 mvp = m_projection_matrix * m_image_matrix;
+    glGenBuffers(1, &m_mvp_uni_id);
+    glBindBuffer(GL_UNIFORM_BUFFER, m_mvp_uni_id);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(float)*16, mvp.constData(), GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     glGenBuffers(1, &m_vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
-    glNamedBufferData(m_vertex_buffer, vertex_count * sizeof(float), vertices, GL_STATIC_DRAW);
+    createTextureFromImage();
 
     m_texture_shader_program->addShaderFromSourceFile(QOpenGLShader::Vertex, "src/spritorama/shaders/texture.vert");
     m_texture_shader_program->addShaderFromSourceFile(QOpenGLShader::Fragment, "src/spritorama/shaders/texture.frag");
     m_texture_shader_program->link();
     // pos_attr = static_cast<GLuint>(m_texture_shader_program.attribLocation("position"));
-
-    createTextureFromImage();
 }
 
 void Viewport::paintGL()
@@ -65,6 +69,11 @@ void Viewport::paintGL()
 
     m_texture_shader_program->bind();
     glBindTextureUnit(0, m_texture_id);
+
+    const QMatrix4x4 mvp = m_projection_matrix * m_image_matrix;
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_mvp_uni_id);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(float)*16, mvp.constData());
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
@@ -79,12 +88,15 @@ void Viewport::paintGL()
 void Viewport::resizeGL(int width, int height)
 {
     glViewport(0, 0, width, height);
+
+    calculateProjectionMatrix(QSize(width, height));
 }
 
 void Viewport::mousePressEvent(QMouseEvent* event)
 {
     m_drawing = true;
-    m_draw_pos = event->pos() / m_scale;
+
+    m_draw_pos = mapScreenToImage(event->pos());
     drawPoint(m_draw_pos);
     update();
 }
@@ -93,10 +105,9 @@ void Viewport::mouseMoveEvent(QMouseEvent* event)
 {
     if (m_drawing)
     {
-        const QPoint new_draw_pos = event->pos() / m_scale;
+        const QPoint new_draw_pos = mapScreenToImage(event->pos());
         drawLine(m_draw_pos, new_draw_pos);
         m_draw_pos = new_draw_pos;
-
         update();
     }
 }
@@ -114,8 +125,8 @@ void Viewport::wheelEvent(QWheelEvent* event)
         if (qAbs(m_scroll_delta) > qreal(150))
         {
             m_scale *= event->delta() > 0 ? 2.0 : 0.5;
+            m_projection_matrix.scale(event->delta() > 0 ? 2.0f : 0.5f);
 
-            setFixedSize(m_image.size() * m_scale);
             update();
 
             m_scroll_delta = qreal(0);
@@ -125,6 +136,17 @@ void Viewport::wheelEvent(QWheelEvent* event)
     {
         event->ignore();
     }
+}
+
+void Viewport::calculateProjectionMatrix(const QSize& viewport_size)
+{
+    const float left = -viewport_size.width() / 2.0f;
+    const float right = -left;
+    const float bottom = -viewport_size.height() / 2.0f;
+    const float top = -bottom;
+
+    m_projection_matrix.setToIdentity();
+    m_projection_matrix.ortho(left, right, bottom, top, -1.0f, 1.0f);
 }
 
 void Viewport::createTextureFromImage()
@@ -137,6 +159,17 @@ void Viewport::createTextureFromImage()
     glTextureParameteri(m_texture_id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTextureParameteri(m_texture_id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTextureParameteri(m_texture_id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    m_image_matrix.setToIdentity();
+    m_image_matrix.translate(-m_image.width() / 2.0f, -m_image.height() / 2.0f, 0.0f);
+
+    constexpr GLsizei vertex_count = 4*2;
+    const float image_width = static_cast<float>(m_image.width());
+    const float image_height = static_cast<float>(m_image.height());
+    const float vertices[vertex_count] = {0.0f,0.0f, image_width,0.0f, image_width,image_height, 0.0f,image_height};
+    glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
+    glNamedBufferData(m_vertex_buffer, vertex_count * sizeof(float), vertices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Viewport::drawLine(const QPoint& start, const QPoint& end)
@@ -159,7 +192,17 @@ void Viewport::drawPoint(const QPoint& pos)
     QPainter painter(&m_image);
     painter.setPen(Qt::blue);
     painter.drawPoint(pos);
+    
+    const QRect aabb(pos, QSize(1, 1));
+    glTextureSubImage2D(m_texture_id, 0, aabb.left(), aabb.top(), aabb.width(), aabb.height(),
+                        GL_RGBA, GL_UNSIGNED_BYTE, m_image.copy(aabb).constBits());
+}
 
-    glTextureSubImage2D(m_texture_id, 0, pos.x(), pos.y(), 1, 1,
-                        GL_RGBA, GL_UNSIGNED_BYTE, m_image.copy(QRect(pos, QSize(1, 1))).constBits());
+QPoint Viewport::mapScreenToImage(const QPoint& screen_pos) const
+{
+    const int offset_x = (width() - static_cast<int>(m_image.width()*m_scale)) / 2;
+    const int offset_y = (height() - static_cast<int>(m_image.height()*m_scale)) / 2;
+    const QPoint offset = QPoint(offset_x, offset_y);
+
+    return (screen_pos - offset) / m_scale;
 }
