@@ -4,6 +4,8 @@ set(SOURCES
     main.cpp
     main_window.cpp
     main_window.hpp
+    opengl_canvas.cpp
+    opengl_canvas.hpp
     viewport.cpp
     viewport.hpp
 )
