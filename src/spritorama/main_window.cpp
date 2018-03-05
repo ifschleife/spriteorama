@@ -19,7 +19,7 @@ MainWindow::MainWindow()
 MainWindow::~MainWindow() = default;
 
 
-void MainWindow::openSprite(const QString& fname)
+void MainWindow::openSprite(QString fname)
 {
     if (!QFileInfo::exists(fname))
     {

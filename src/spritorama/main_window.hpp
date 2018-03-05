@@ -9,7 +9,7 @@ public:
     explicit MainWindow();
     ~MainWindow() override;
 
-    void openSprite(const QString& fname);
+    void openSprite(QString fname);
 
 private slots:
     void onOpenSprite();
