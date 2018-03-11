@@ -50,7 +50,7 @@ void OpenGLCanvas::initializeGL()
     glBindVertexArray(vao);
 
     calculateProjectionMatrix(size());
-    const QMatrix4x4 mvp = m_projection_matrix * m_image_matrix;
+    const QMatrix4x4 mvp = m_projection_matrix * m_view_matrix * m_image_matrix;
     glGenBuffers(1, &m_mvp_uni_id);
     glBindBuffer(GL_UNIFORM_BUFFER, m_mvp_uni_id);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(float)*16, mvp.constData(), GL_STATIC_DRAW);
@@ -74,7 +74,7 @@ void OpenGLCanvas::paintGL()
     m_texture_shader_program->bind();
     glBindTextureUnit(0, m_texture_id);
 
-    const QMatrix4x4 mvp = m_projection_matrix * m_image_matrix;
+    const QMatrix4x4 mvp = m_projection_matrix * m_view_matrix * m_image_matrix;
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_mvp_uni_id);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(float)*16, mvp.constData());
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -130,7 +130,7 @@ void OpenGLCanvas::wheelEvent(QWheelEvent* event)
         {
             const float scale = event->delta() > 0 ? 2.0f : 0.5f;
             m_scale *= scale;
-            m_projection_matrix.scale(scale);
+            m_view_matrix.scale(scale);
 
             update();
 

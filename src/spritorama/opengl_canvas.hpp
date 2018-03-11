@@ -41,6 +41,7 @@ private:
 
     QImage m_image;
     QMatrix4x4 m_image_matrix;
+    QMatrix4x4 m_view_matrix;
     QMatrix4x4 m_projection_matrix;
     float m_scale;
 
