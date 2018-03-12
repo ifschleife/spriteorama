@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QImage>
+#include <QTransform>
 #include <QWidget>
 
 
@@ -12,7 +13,23 @@ public:
     void loadImageFromFile(QString image_path);
 
 private:
+    void mousePressEvent(class QMouseEvent* event) override;
+    void mouseMoveEvent(class QMouseEvent* event) override;
+    void mouseReleaseEvent(class QMouseEvent* event) override;
+    void wheelEvent(class QWheelEvent* event) override;
+
+private:
+    QPoint mapScreenPosToCanvas(const QPoint& screen_pos) const;
+
+private:
     class OpenGLCanvas* m_canvas;
     class QScrollBar* m_horizontal_scrollbar;
     class QScrollBar* m_vertical_scrollbar;
+
+    QTransform m_scale;
+    QTransform m_translation;
+
+    int m_scroll_delta;
+    bool m_drawing;
+    QPoint m_draw_pos;
 };

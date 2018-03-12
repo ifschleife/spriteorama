@@ -1,24 +1,24 @@
 #include "opengl_canvas.hpp"
 
 #include <QDebug>
-#include <QMouseEvent>
 #include <QOpenGLShaderProgram>
 #include <QPainter>
-#include <QWheelEvent>
 
 
 OpenGLCanvas::OpenGLCanvas(QWidget* parent)
     : QOpenGLWidget(parent)
     , QOpenGLFunctions_4_5_Core()
-    , m_drawing(false)
-    , m_scroll_delta(0)
     , m_texture_shader_program(new QOpenGLShaderProgram(this))
     , m_image(QSize(500, 500), QImage::Format_RGB32)
-    , m_scale(1.0)
 {
     // setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
     
     m_image.fill(Qt::red);
+}
+
+QSize OpenGLCanvas::sizeHint() const
+{
+    return m_image.size();
 }
 
 void OpenGLCanvas::setImage(QImage image)
@@ -27,18 +27,49 @@ void OpenGLCanvas::setImage(QImage image)
     if (m_image.isNull())
         return;
 
-    resize(m_image.size());
-
     glDeleteTextures(1, &m_texture_id);
-
     createTextureFromImage();
 
+    adjustSize();
     update();
 }
 
-QSize OpenGLCanvas::sizeHint() const
+QSize OpenGLCanvas::getImageSize() const
 {
-    return m_image.size() * qreal(m_scale);
+    return m_image.size();
+}
+
+void OpenGLCanvas::drawLine(const QPoint& start, const QPoint& end)
+{
+    QPolygon stroke;
+    stroke.append(start);
+    stroke.append(end);
+
+    QPainter painter(&m_image);
+    painter.setPen(Qt::blue);
+    painter.drawPolyline(stroke);
+
+    const QRect aabb = stroke.boundingRect();
+    glTextureSubImage2D(m_texture_id, 0, aabb.left(), aabb.top(), aabb.width(), aabb.height(),
+                        GL_RGBA, GL_UNSIGNED_BYTE, m_image.copy(aabb).constBits());
+    update();
+}
+
+void OpenGLCanvas::drawPoint(const QPoint& pos)
+{
+    QPainter painter(&m_image);
+    painter.setPen(Qt::blue);
+    painter.drawPoint(pos);
+    
+    const QRect aabb(pos, QSize(1, 1));
+    glTextureSubImage2D(m_texture_id, 0, aabb.left(), aabb.top(), aabb.width(), aabb.height(),
+                        GL_RGBA, GL_UNSIGNED_BYTE, m_image.copy(aabb).constBits());
+    update();
+}
+
+void OpenGLCanvas::setTransform(const QTransform& transform)
+{
+    m_image_transform = transform;
 }
 
 void OpenGLCanvas::initializeGL()
@@ -50,7 +81,7 @@ void OpenGLCanvas::initializeGL()
     glBindVertexArray(vao);
 
     calculateProjectionMatrix(size());
-    const QMatrix4x4 mvp = m_projection_matrix * m_view_matrix * m_image_matrix;
+    const QMatrix4x4 mvp = m_projection_matrix * m_image_transform;
     glGenBuffers(1, &m_mvp_uni_id);
     glBindBuffer(GL_UNIFORM_BUFFER, m_mvp_uni_id);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(float)*16, mvp.constData(), GL_STATIC_DRAW);
@@ -74,7 +105,7 @@ void OpenGLCanvas::paintGL()
     m_texture_shader_program->bind();
     glBindTextureUnit(0, m_texture_id);
 
-    const QMatrix4x4 mvp = m_projection_matrix * m_view_matrix * m_image_matrix;
+    const QMatrix4x4 mvp = m_projection_matrix * m_image_transform;
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_mvp_uni_id);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(float)*16, mvp.constData());
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -94,53 +125,6 @@ void OpenGLCanvas::resizeGL(int width, int height)
     glViewport(0, 0, width, height);
 
     calculateProjectionMatrix(QSize(width, height));
-}
-
-void OpenGLCanvas::mousePressEvent(QMouseEvent* event)
-{
-    m_drawing = true;
-
-    m_draw_pos = mapScreenToImage(event->pos());
-    drawPoint(m_draw_pos);
-    update();
-}
-
-void OpenGLCanvas::mouseMoveEvent(QMouseEvent* event)
-{
-    if (m_drawing)
-    {
-        const QPoint new_draw_pos = mapScreenToImage(event->pos());
-        drawLine(m_draw_pos, new_draw_pos);
-        m_draw_pos = new_draw_pos;
-        update();
-    }
-}
-
-void OpenGLCanvas::mouseReleaseEvent(QMouseEvent*)
-{
-    m_drawing = false;
-}
-
-void OpenGLCanvas::wheelEvent(QWheelEvent* event)
-{
-    if (event->modifiers() & Qt::ControlModifier)
-    {
-        m_scroll_delta += event->delta();
-        if (qAbs(m_scroll_delta) > 150)
-        {
-            const float scale = event->delta() > 0 ? 2.0f : 0.5f;
-            m_scale *= scale;
-            m_view_matrix.scale(scale);
-
-            update();
-
-            m_scroll_delta = 0;
-        }
-    }
-    else
-    {
-        event->ignore();
-    }
 }
 
 void OpenGLCanvas::calculateProjectionMatrix(const QSize& viewport_size)
@@ -165,9 +149,6 @@ void OpenGLCanvas::createTextureFromImage()
     glTextureParameteri(m_texture_id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTextureParameteri(m_texture_id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    m_image_matrix.setToIdentity();
-    m_image_matrix.translate(-m_image.width() / 2.0f, -m_image.height() / 2.0f, 0.0f);
-
     constexpr GLsizei vertex_count = 4*2;
     const float image_width = static_cast<float>(m_image.width());
     const float image_height = static_cast<float>(m_image.height());
@@ -175,39 +156,4 @@ void OpenGLCanvas::createTextureFromImage()
     glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
     glNamedBufferData(m_vertex_buffer, vertex_count * sizeof(float), vertices, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-void OpenGLCanvas::drawLine(const QPoint& start, const QPoint& end)
-{
-    QPolygon stroke;
-    stroke.append(start);
-    stroke.append(end);
-
-    QPainter painter(&m_image);
-    painter.setPen(Qt::blue);
-    painter.drawPolyline(stroke);
-
-    const QRect aabb = stroke.boundingRect();
-    glTextureSubImage2D(m_texture_id, 0, aabb.left(), aabb.top(), aabb.width(), aabb.height(),
-                        GL_RGBA, GL_UNSIGNED_BYTE, m_image.copy(aabb).constBits());
-}
-
-void OpenGLCanvas::drawPoint(const QPoint& pos)
-{
-    QPainter painter(&m_image);
-    painter.setPen(Qt::blue);
-    painter.drawPoint(pos);
-    
-    const QRect aabb(pos, QSize(1, 1));
-    glTextureSubImage2D(m_texture_id, 0, aabb.left(), aabb.top(), aabb.width(), aabb.height(),
-                        GL_RGBA, GL_UNSIGNED_BYTE, m_image.copy(aabb).constBits());
-}
-
-QPoint OpenGLCanvas::mapScreenToImage(const QPoint& screen_pos) const
-{
-    const int offset_x = (width() - static_cast<int>(m_image.width()*m_scale)) / 2;
-    const int offset_y = (height() - static_cast<int>(m_image.height()*m_scale)) / 2;
-    const QPoint offset = QPoint(offset_x, offset_y);
-
-    return (screen_pos - offset) / qreal(m_scale);
 }

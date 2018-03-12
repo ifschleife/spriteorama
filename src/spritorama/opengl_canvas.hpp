@@ -5,6 +5,7 @@
 
 #include <QImage>
 #include <QMatrix4x4>
+#include <QTransform>
 
 
 class OpenGLCanvas : public QOpenGLWidget, protected QOpenGLFunctions_4_5_Core
@@ -12,38 +13,31 @@ class OpenGLCanvas : public QOpenGLWidget, protected QOpenGLFunctions_4_5_Core
 public:
     explicit OpenGLCanvas(QWidget* parent);
 
-    void setImage(QImage image);
     QSize sizeHint() const override;
+
+    void setImage(QImage image);
+    QSize getImageSize() const;
+
+    void drawLine(const QPoint& start, const QPoint& end);
+    void drawPoint(const QPoint& pos);
+
+    void setTransform(const QTransform& transform);
 
 private:
     void initializeGL() override;
     void paintGL() override;
     void resizeGL(int width, int height) override;
 
-    void mousePressEvent(class QMouseEvent* event) override;
-    void mouseMoveEvent(class QMouseEvent* event) override;
-    void mouseReleaseEvent(class QMouseEvent* event) override;
-    void wheelEvent(class QWheelEvent* event) override;
-
 private:
     void calculateProjectionMatrix(const QSize& viewport_size);
     void createTextureFromImage();
-    void drawLine(const QPoint& start, const QPoint& end);
-    void drawPoint(const QPoint& pos);
-    QPoint mapScreenToImage(const QPoint& screen_pos) const;
 
 private:
-    bool m_drawing;
-    QPoint m_draw_pos;
-    int m_scroll_delta;
-
     class QOpenGLShaderProgram* m_texture_shader_program;
 
     QImage m_image;
-    QMatrix4x4 m_image_matrix;
-    QMatrix4x4 m_view_matrix;
     QMatrix4x4 m_projection_matrix;
-    float m_scale;
+    QTransform m_image_transform;
 
     GLuint m_texture_id;
     GLuint m_vertex_buffer;
