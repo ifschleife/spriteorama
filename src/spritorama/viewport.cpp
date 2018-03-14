@@ -3,9 +3,9 @@
 #include "opengl_canvas.hpp"
 
 #include <QDebug>
+#include <QGridLayout>
 #include <QMouseEvent>
 #include <QScrollBar>
-#include <QVBoxLayout>
 #include <QWheelEvent>
 
 
@@ -16,11 +16,15 @@ Viewport::Viewport(QWidget* parent)
     // , m_horizontal_scrollbar(new QScrollBar(Qt::Horizontal, this))
     // , m_vertical_scrollbar(new QScrollBar(Qt::Vertical, this))
 {
-    QVBoxLayout* layout = new QVBoxLayout(this);
-    layout->setMargin(0);
-    layout->addWidget(m_canvas);
+    QGridLayout* layout = new QGridLayout(this);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->addWidget(m_canvas, 0, 0);
     // layout->addWidget(m_horizontal_scrollbar);
     setLayout(layout);
+
+    m_scale = QTransform::fromScale(1.0, 1.0);
+    m_translation = QTransform::fromTranslate(-m_canvas->getImageSize().width() / 2.0, -m_canvas->getImageSize().height() / 2.0);
+    m_canvas->setTransform(m_translation * m_scale);
 }
 
 void Viewport::loadImageFromFile(QString image_path)
