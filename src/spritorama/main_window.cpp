@@ -19,7 +19,12 @@ MainWindow::MainWindow()
 MainWindow::~MainWindow() = default;
 
 
-void MainWindow::openSprite(QString fname)
+void MainWindow::createEmptyImage()
+{
+    m_viewport->createEmptyCanvas();
+}
+
+void MainWindow::openImage(QString fname)
 {
     if (!QFileInfo::exists(fname))
     {
@@ -27,17 +32,17 @@ void MainWindow::openSprite(QString fname)
         return;
     }
 
-    m_viewport->loadImageFromFile(fname);
+    m_viewport->createCanvasFromImage(fname);
 }
 
-void MainWindow::onOpenSprite()
+void MainWindow::onOpenImage()
 {
     QSettings settings;
     const QString default_path = settings.value("path/root").toString();
 
-    const QString fname = QFileDialog::getOpenFileName(this, tr("Select Sprite"), default_path, "Images (*.png);;");
+    const QString fname = QFileDialog::getOpenFileName(this, tr("Select Image"), default_path, "Images (*.png);;");
     if (!fname.isEmpty())
     {
-        openSprite(fname);
+        openImage(fname);
     }
 }

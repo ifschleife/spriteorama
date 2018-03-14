@@ -37,8 +37,10 @@ int main(int argc, char** argv)
     parser.process(app);
 
     const QString open_filename = parser.value("open");
-    if (!open_filename.isEmpty())
-        main_window->openSprite(open_filename);
+    if (open_filename.isEmpty())
+        main_window->createEmptyImage();
+    else
+        main_window->openImage(open_filename);
 
     return app.exec();
 }

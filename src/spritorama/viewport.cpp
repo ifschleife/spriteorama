@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QGridLayout>
 #include <QMouseEvent>
+#include <QPainter>
 #include <QScrollBar>
 #include <QWheelEvent>
 
@@ -22,12 +23,24 @@ Viewport::Viewport(QWidget* parent)
     // layout->addWidget(m_horizontal_scrollbar);
     setLayout(layout);
 
-    m_scale = QTransform::fromScale(1.0, 1.0);
-    m_translation = QTransform::fromTranslate(-m_canvas->getImageSize().width() / 2.0, -m_canvas->getImageSize().height() / 2.0);
-    m_canvas->setTransform(m_translation * m_scale);
 }
 
-void Viewport::loadImageFromFile(QString image_path)
+void Viewport::createEmptyCanvas()
+{
+    QImage image = QImage(500, 500, QImage::Format_RGB32);
+    image.fill(Qt::red);
+    QPainter painter(&image);
+    painter.fillRect(100, 100, 300, 300, Qt::blue);
+
+    m_canvas->setImage(image);
+
+    m_scale = QTransform::fromScale(1.0, 1.0);
+    m_translation = QTransform::fromTranslate(-image.width() / 2.0, -image.height() / 2.0);
+    m_canvas->setTransform(m_translation * m_scale);
+    m_canvas->update();
+}
+
+void Viewport::createCanvasFromImage(QString image_path)
 {
     QImage image(image_path);
     if (image.isNull())

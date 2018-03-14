@@ -11,7 +11,9 @@
 			"initializer_list": "cpp",
 			"string_view": "cpp",
 			"utility": "cpp",
-			"qopenglshaderprogram": "cpp"
+			"qopenglshaderprogram": "cpp",
+			"optional": "cpp",
+			"system_error": "cpp"
 		}
 	}
 }

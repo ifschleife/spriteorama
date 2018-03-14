@@ -9,10 +9,11 @@ public:
     explicit MainWindow();
     ~MainWindow() override;
 
-    void openSprite(QString fname);
+    void createEmptyImage();
+    void openImage(QString fname);
 
 private slots:
-    void onOpenSprite();
+    void onOpenImage();
 
 private:
     class Viewport* m_viewport;

@@ -9,11 +9,8 @@ OpenGLCanvas::OpenGLCanvas(QWidget* parent)
     : QOpenGLWidget(parent)
     , QOpenGLFunctions_4_5_Core()
     , m_texture_shader_program(new QOpenGLShaderProgram(this))
-    , m_image(QSize(500, 500), QImage::Format_RGB32)
 {
     // setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
-    
-    m_image.fill(Qt::red);
 }
 
 QSize OpenGLCanvas::sizeHint() const

@@ -10,7 +10,8 @@ class Viewport : public QWidget
 public:
     explicit Viewport(QWidget* parent);
 
-    void loadImageFromFile(QString image_path);
+    void createEmptyCanvas();
+    void createCanvasFromImage(QString image_path);
 
 private:
     void mousePressEvent(class QMouseEvent* event) override;
