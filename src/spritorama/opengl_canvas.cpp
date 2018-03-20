@@ -67,6 +67,8 @@ void OpenGLCanvas::drawPoint(const QPoint& pos)
 void OpenGLCanvas::setTransform(const QTransform& transform)
 {
     m_image_transform = transform;
+
+    calculateProjectionMatrix(size());
 }
 
 void OpenGLCanvas::initializeGL()
@@ -126,10 +128,13 @@ void OpenGLCanvas::resizeGL(int width, int height)
 
 void OpenGLCanvas::calculateProjectionMatrix(const QSize& viewport_size)
 {
-    const float left = -viewport_size.width() / 2.0f;
-    const float right = -left;
-    const float bottom = -viewport_size.height() / 2.0f;
-    const float top = -bottom;
+    const int img_width =  m_image.size().width();
+    const int img_height = m_image.size().height();
+
+    const float left = std::min(-img_width / 2.0f, -viewport_size.width() / 2.0f);
+    const float right = -left + std::min(0, viewport_size.width() - img_width);
+    const float top = std::max(img_height / 2.0f, viewport_size.height() / 2.0f);
+    const float bottom = -top + std::max(0, img_height - viewport_size.height());
 
     m_projection_matrix.setToIdentity();
     m_projection_matrix.ortho(left, right, bottom, top, -1.0f, 1.0f);
