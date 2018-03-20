@@ -149,7 +149,10 @@ void OpenGLCanvas::createTextureFromImage()
     constexpr GLsizei vertex_count = 4*2;
     const float image_width = static_cast<float>(m_image.width());
     const float image_height = static_cast<float>(m_image.height());
-    const float vertices[vertex_count] = {0.0f,0.0f, image_width,0.0f, image_width,image_height, 0.0f,image_height};
+    const float vertices[vertex_count] = {-image_width / 2.0f, -image_height / 2.0f,
+                                           image_width / 2.0f, -image_height/2.0f,
+                                           image_width/2.0f, image_height/2.0f,
+                                          -image_width/2.0f, image_height/2.0f};
     glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
     glNamedBufferData(m_vertex_buffer, vertex_count * sizeof(float), vertices, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);

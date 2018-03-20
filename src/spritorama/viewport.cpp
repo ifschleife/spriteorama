@@ -35,7 +35,7 @@ void Viewport::createEmptyCanvas()
     m_canvas->setImage(image);
 
     m_scale = QTransform::fromScale(1.0, 1.0);
-    m_translation = QTransform::fromTranslate(-image.width() / 2.0, -image.height() / 2.0);
+    m_translation = QTransform::fromTranslate(0.0, 0.0);
     m_canvas->setTransform(m_translation * m_scale);
     m_canvas->update();
 }
@@ -49,7 +49,7 @@ void Viewport::createCanvasFromImage(QString image_path)
     m_canvas->setImage(image);
 
     m_scale = QTransform::fromScale(1.0, 1.0);
-    m_translation = QTransform::fromTranslate(-image.width() / 2.0, -image.height() / 2.0);
+    m_translation = QTransform::fromTranslate(0.0, 0.0);
     m_canvas->setTransform(m_translation * m_scale);
     m_canvas->update();
 }
