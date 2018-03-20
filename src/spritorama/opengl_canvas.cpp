@@ -67,8 +67,6 @@ void OpenGLCanvas::drawPoint(const QPoint& pos)
 void OpenGLCanvas::setTransform(const QTransform& transform)
 {
     m_image_transform = transform;
-
-    calculateProjectionMatrix(size());
 }
 
 void OpenGLCanvas::initializeGL()
