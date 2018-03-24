@@ -1,6 +1,5 @@
 #include "main_window.hpp"
 
-#include <memory>
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QDir>
@@ -30,16 +29,21 @@ int main(int argc, char** argv)
     const QCommandLineOption open_option(QStringList() << "open" << "o", "Open sprite on start.", "filename");
     parser.addOption(open_option);
 
-    std::unique_ptr<MainWindow> main_window = std::make_unique<MainWindow>();
-    main_window->show();
+    MainWindow main_window;
+    main_window.show();
 
     parser.process(app);
 
     const QString open_filename = parser.value("open");
     if (open_filename.isEmpty())
-        main_window->createEmptyImage();
+    {
+        main_window.createEmptyImage();
+    }
     else
-        main_window->openImage(open_filename);
+    {
+        main_window.openImage(open_filename);
+    }
+    main_window.adjustSize();
 
     return app.exec();
 }

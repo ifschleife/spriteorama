@@ -17,7 +17,7 @@ Viewport::Viewport(QWidget* parent)
     // , m_horizontal_scrollbar(new QScrollBar(Qt::Horizontal, this))
     // , m_vertical_scrollbar(new QScrollBar(Qt::Vertical, this))
 {
-    QGridLayout* layout = new QGridLayout(this);
+    QGridLayout* layout = new QGridLayout;
     layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(m_canvas, 0, 0);
     // layout->addWidget(m_horizontal_scrollbar);
@@ -52,6 +52,11 @@ void Viewport::createCanvasFromImage(QString image_path)
     m_translation = QTransform::fromTranslate(0.0, 0.0);
     m_canvas->setTransform(m_translation * m_scale);
     m_canvas->update();
+}
+
+QSize Viewport::sizeHint() const
+{
+    return m_canvas->size();
 }
 
 void Viewport::mousePressEvent(QMouseEvent* event)

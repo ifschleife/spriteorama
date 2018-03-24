@@ -13,6 +13,8 @@ public:
     void createEmptyCanvas();
     void createCanvasFromImage(QString image_path);
 
+    QSize sizeHint() const override;
+
 private:
     void mousePressEvent(class QMouseEvent* event) override;
     void mouseMoveEvent(class QMouseEvent* event) override;
