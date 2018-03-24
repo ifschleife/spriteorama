@@ -387,6 +387,6 @@ __pycache__/
 
 # End of https://www.gitignore.io/api/vim,linux,cmake,windows,qtcreator,visualstudio
 
-.vscode/.cmaketools.json
-.vscode/c_cpp_properties.json
+*.code-workspace
+.vscode/*
 assets/*
