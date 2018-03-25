@@ -34,18 +34,9 @@ void Viewport::createEmptyCanvas(const QSize& size)
     m_canvas->setImage(image);
 }
 
-void Viewport::createCanvasFromImage(QString image_path)
+void Viewport::createCanvasFromImage(QImage image)
 {
-    QImage image(image_path);
-    if (image.isNull())
-        return;
-
     m_canvas->setImage(image);
-
-    m_scale = QTransform::fromScale(1.0, 1.0);
-    m_translation = QTransform::fromTranslate(0.0, 0.0);
-    m_canvas->setTransform(m_translation * m_scale);
-    m_canvas->update();
 }
 
 QSize Viewport::sizeHint() const

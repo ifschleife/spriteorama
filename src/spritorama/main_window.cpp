@@ -16,7 +16,7 @@ MainWindow::MainWindow()
     : QMainWindow{nullptr}
     , m_viewport(new Viewport(this))
 {
-    const QSize screen_size = QGuiApplication::screenAt(geometry().topLeft())->availableGeometry().size();
+    const QSize screen_size = currentScreenResolution();
     const int window_x_offset = qMin(200, static_cast<int>(screen_size.width() * 0.1f));
     const int window_y_offset = qMin(200, static_cast<int>(screen_size.height() * 0.1f));
     move(window_x_offset, window_y_offset);
@@ -43,11 +43,25 @@ void MainWindow::openImage(QString fname)
 {
     if (!QFileInfo::exists(fname))
     {
-        QMessageBox::warning(this, tr("Error opening file"), tr("Could not open %1").arg(fname));
+        QMessageBox::critical(this, tr("Error opening file"), tr("Could not open %1").arg(fname));
         return;
     }
 
-    m_viewport->createCanvasFromImage(fname);
+    QImage image = QImage(fname);
+    if (image.isNull())
+    {
+        QMessageBox::critical(this, tr("Error opening image"), tr("Could not read image from %1").arg(fname));
+    }
+
+    const QSize screen_size = currentScreenResolution();
+    QSize window_size = image.size();
+    if (image.width() >= screen_size.width() || image.height() >= screen_size.height())
+    {
+        window_size = screen_size * 0.8;
+    }
+
+    m_viewport->createCanvasFromImage(image);
+    resize(window_size);
 }
 
 void MainWindow::onOpenImage()
@@ -60,4 +74,9 @@ void MainWindow::onOpenImage()
     {
         openImage(fname);
     }
+}
+
+QSize MainWindow::currentScreenResolution() const
+{
+    return QGuiApplication::screenAt(geometry().topLeft())->availableGeometry().size();
 }

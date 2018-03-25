@@ -11,7 +11,7 @@ public:
     explicit Viewport(QWidget* parent);
 
     void createEmptyCanvas(const QSize& size);
-    void createCanvasFromImage(QString image_path);
+    void createCanvasFromImage(QImage image);
 
     QSize sizeHint() const override;
 
