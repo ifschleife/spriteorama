@@ -2,6 +2,7 @@
 
 #include "viewport.hpp"
 
+#include <QAction>
 #include <QDebug>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -19,6 +20,11 @@ MainWindow::MainWindow()
     const int window_x_offset = qMin(200, static_cast<int>(screen_size.width() * 0.1f));
     const int window_y_offset = qMin(200, static_cast<int>(screen_size.height() * 0.1f));
     move(window_x_offset, window_y_offset);
+
+    QAction* open_action = new QAction(this);
+    open_action->setShortcut(Qt::CTRL + Qt::Key_O);
+    connect(open_action, &QAction::triggered, this, &MainWindow::onOpenImage);
+    addAction(open_action);
 
     setCentralWidget(m_viewport);
 }
