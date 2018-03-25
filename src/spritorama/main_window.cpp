@@ -34,7 +34,9 @@ MainWindow::~MainWindow() = default;
 
 void MainWindow::createEmptyImage()
 {
-    m_viewport->createEmptyCanvas();
+    const QSize canvas_size = QSize(500, 500);
+    resize(canvas_size);
+    m_viewport->createEmptyCanvas(canvas_size);
 }
 
 void MainWindow::openImage(QString fname)

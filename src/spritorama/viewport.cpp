@@ -22,22 +22,16 @@ Viewport::Viewport(QWidget* parent)
     layout->addWidget(m_canvas, 0, 0);
     // layout->addWidget(m_horizontal_scrollbar);
     setLayout(layout);
-
 }
 
-void Viewport::createEmptyCanvas()
+void Viewport::createEmptyCanvas(const QSize& size)
 {
-    QImage image = QImage(500, 500, QImage::Format_RGB32);
+    QImage image = QImage(size, QImage::Format_RGB32);
     image.fill(Qt::red);
     QPainter painter(&image);
-    painter.fillRect(100, 100, 300, 300, Qt::blue);
+    painter.fillRect(100, 100, size.width()-200, size.height()-200, Qt::blue);
 
     m_canvas->setImage(image);
-
-    m_scale = QTransform::fromScale(1.0, 1.0);
-    m_translation = QTransform::fromTranslate(0.0, 0.0);
-    m_canvas->setTransform(m_translation * m_scale);
-    m_canvas->update();
 }
 
 void Viewport::createCanvasFromImage(QString image_path)

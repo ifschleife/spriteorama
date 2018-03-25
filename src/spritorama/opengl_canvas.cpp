@@ -24,6 +24,9 @@ void OpenGLCanvas::setImage(QImage image)
     if (m_image.isNull())
         return;
 
+    if (!isValid())
+        return; // initializeGL has not been called yet
+    
     glDeleteTextures(1, &m_texture_id);
     createTextureFromImage();
 

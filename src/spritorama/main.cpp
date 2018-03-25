@@ -28,11 +28,9 @@ int main(int argc, char** argv)
 
     const QCommandLineOption open_option(QStringList() << "open" << "o", "Open sprite on start.", "filename");
     parser.addOption(open_option);
+    parser.process(app);
 
     MainWindow main_window;
-    main_window.show();
-
-    parser.process(app);
 
     const QString open_filename = parser.value("open");
     if (open_filename.isEmpty())
@@ -43,7 +41,7 @@ int main(int argc, char** argv)
     {
         main_window.openImage(open_filename);
     }
-    main_window.adjustSize();
 
+    main_window.show();
     return app.exec();
 }
