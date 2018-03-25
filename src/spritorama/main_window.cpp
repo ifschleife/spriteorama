@@ -67,7 +67,7 @@ void MainWindow::openImage(QString fname)
 void MainWindow::onOpenImage()
 {
     QSettings settings;
-    const QString default_path = settings.value("path/root").toString();
+    const QString default_path = settings.value("path/assets").toString();
 
     const QString fname = QFileDialog::getOpenFileName(this, tr("Select Image"), default_path, "Images (*.png);;");
     if (!fname.isEmpty())

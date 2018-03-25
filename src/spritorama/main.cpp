@@ -21,6 +21,7 @@ int main(int argc, char** argv)
 
     QSettings settings;
     settings.setValue("path/root", QDir::current().absolutePath());
+    settings.setValue("path/assets", QDir::current().absolutePath() + "/assets");
 
     QCommandLineParser parser;
     parser.setApplicationDescription("Spritorama Sprite and Diorama Editor");
