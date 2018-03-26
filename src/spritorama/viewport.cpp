@@ -90,15 +90,14 @@ void Viewport::wheelEvent(QWheelEvent* event)
 
 QPoint Viewport::mapScreenPosToCanvas(const QPoint& screen_pos) const
 {
-    const qreal scale = m_scale.m11();
-    const QSize image_size = m_canvas->getImageSize();
+    const QSize image_size = m_canvas->getImageScreenSize();
 
     const int canvas_width = width() - std::min(0, width() - image_size.width());
     const int canvas_height = height() + std::max(0, image_size.height() - height());
 
-    const int offset_x = (canvas_width - static_cast<int>(image_size.width()*scale)) / 2;
-    const int offset_y = (canvas_height - static_cast<int>(image_size.height()*scale)) / 2;
+    const int offset_x = (canvas_width - image_size.width()) / 2;
+    const int offset_y = (canvas_height - image_size.height()) / 2;
     const QPoint offset = QPoint(offset_x, offset_y);
 
-    return (screen_pos - offset) / scale;
+    return (screen_pos - offset) / m_scale.m11();
 }

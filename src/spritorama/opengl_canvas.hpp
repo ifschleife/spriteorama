@@ -16,7 +16,7 @@ public:
     QSize sizeHint() const override;
 
     void setImage(QImage image);
-    QSize getImageSize() const;
+    QSize getImageScreenSize() const;
 
     void drawLine(const QPoint& start, const QPoint& end);
     void drawPoint(const QPoint& pos);
